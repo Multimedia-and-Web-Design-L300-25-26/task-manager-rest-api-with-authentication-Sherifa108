@@ -1,19 +1,25 @@
 import mongoose from "mongoose";
-
-
-// Create User schema
-// Fields:
-// - name (String, required)
-// - email (String, required, unique)
-// - password (String, required, minlength 6)
-// - createdAt (default Date.now)
-
-
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema({
-  // Students implement
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
 });
 
-const User = mongoose.model("User", userSchema);
+// hash password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
 
-export default User;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+export default mongoose.model("User", userSchema);
